@@ -25,16 +25,14 @@ aplicación móvil de notificación de seguridad.
 
 ## 🧩 Módulos documentados
 
-| Módulo                    | Tipo de log                      | Decoder                                      | Reglas (rango ID)           | Salida                                            |
-| ------------------------- | -------------------------------- | -------------------------------------------- | --------------------------- | ------------------------------------------------- |
-| **FortiGate**             | Syslog                           | decoders nativos de Wazuh (`81629`, `81612`) | `100050`, `100300`–`100303` | Alertas IPS crítico/alto/medio, cambios de config |
-| **FortiWeb** (WAF)        | Syslog key=value                 | `fortiweb.xml` (custom, ~50 campos)          | `100990`, `100992`          | Alertas de ataque nivel HIGH                      |
-| **Darktrace**             | CEF                              | `Darktrace.xml`                              | `100100`                    | Alertas de anomalías de red/NDR                   |
-| **FortiSIEM**             | XML → JSON (vía listener propio) | `fortisiem.xml` (`log_format=json`)      | `190102`                    | Alertas por severidad 8–10                        |
-| **Banca Digital**         | JSON (auditoría transaccional)   | `BancaDigital.xml` (`CortexAuditWorker`)     | `110200`–`110229`           | Fuerza bruta, ATO, geo-anomalías, montos altos    |
-| **Integración app móvil** | N/A (consumidor)                 | —                                            | dispara con `level >= 9`    | Push al backend "app"                             |
-
-Ver el detalle de cada uno en `docs/`.
+| Módulo | Tipo de log | Decoder | Salida |
+| :--- | :--- | :--- | :--- |
+| **FortiGate** | Syslog | decoders nativos de Wazuh | Alertas IPS crítico/alto/medio, cambios de config |
+| **FortiWeb (WAF)** | Syslog key=value | `fortiweb.xml` | Alertas de ataque nivel HIGH |
+| **Darktrace** | CEF | `Darktrace.xml` | Alertas de anomalías de red/NDR |
+| **FortiSIEM** | XML → JSON (vía listener propio) | `fortisiem.xml` | Alertas por severidad 8–10 |
+| **Banca Digital** | JSON (auditoría transaccional) | `BancaDigital.xml` | Fuerza bruta, ATO, geo-anomalías, montos altos |
+| **Integración app móvil** | N/A (consumidor) | — | Push al backend "app" |
 
 ---
 
