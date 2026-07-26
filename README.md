@@ -29,7 +29,7 @@ aplicación móvil de notificación de seguridad.
 | **FortiGate**             | Syslog                           | decoders nativos de Wazuh (`81629`, `81612`) | `100050`, `100300`–`100303` | Alertas IPS crítico/alto/medio, cambios de config |
 | **FortiWeb** (WAF)        | Syslog key=value                 | `fortiweb.xml` (custom, ~50 campos)          | `100990`, `100992`          | Alertas de ataque nivel HIGH                      |
 | **Darktrace**             | CEF                              | `Darktrace.xml`                              | `100100`                    | Alertas de anomalías de red/NDR                   |
-| **FortiSIEM**             | XML → JSON (vía listener propio) | `local_decoder.xml` (`log_format=json`)      | `190102`                    | Alertas por severidad 8–10                        |
+| **FortiSIEM**             | XML → JSON (vía listener propio) | `fortisiem.xml` (`log_format=json`)      | `190102`                    | Alertas por severidad 8–10                        |
 | **Banca Digital**         | JSON (auditoría transaccional)   | `BancaDigital.xml` (`CortexAuditWorker`)     | `110200`–`110229`           | Fuerza bruta, ATO, geo-anomalías, montos altos    |
 | **Integración app móvil** | N/A (consumidor)                 | —                                            | dispara con `level >= 9`    | Push al backend "app"                             |
 
