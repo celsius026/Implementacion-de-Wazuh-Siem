@@ -1,19 +1,6 @@
-<group name="local,">
-
-  <!-- ... otras reglas locales existentes ... -->
-
-  <rule id="100050" level="0">
-    <if_sid>592</if_sid>
-    <regex>/var/log/fortigate/.*\.log</regex>
-    <description>Ignorar reduccion de tamano en cualquier log de Fortigate.</description>
-  </rule>
-
-</group>
-
-
 <group name="fortigate,custom">
 
-  <!-- FortiGate IPS Critical -->
+  <!-- FortiGate IPS Criticall -->
   <rule id="100300" level="12">
     <if_sid>81629</if_sid>
     <field name="crlevel">^critical$</field>
@@ -24,6 +11,7 @@
       fortigate,attack,critical
     </group>
   </rule>
+
 
   <!-- FortiGate IPS High -->
   <rule id="100301" level="12">
@@ -37,6 +25,7 @@
     </group>
   </rule>
 
+
   <!-- FortiGate IPS Medium -->
   <rule id="100302" level="10">
     <if_sid>81629</if_sid>
@@ -49,10 +38,11 @@
     </group>
   </rule>
 
-  <rule id="100303" level="12">
-    <if_sid>81612</if_sid>
-    <description>FortiGate - Cambio de configuracion realizado (Edit) by $(dstuser)</description>
-    <group>fortigate,configuration_change,critical</group>
-  </rule>
+
+    <rule id="100303" level="12">
+      <if_sid>81612</if_sid>
+      <description>FortiGate - Cambio de configuración realizado (Edit) by $(dstuser)</description>
+      <group>fortigate,configuration_change,critical</group>
+    </rule>
 
 </group>

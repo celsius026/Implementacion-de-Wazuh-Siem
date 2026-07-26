@@ -1,11 +1,17 @@
-<!-- Modify it at your will. -->
-
 <group name="fortisiem,">
 
-  <rule id="190102" level="13">
-    <field name="source">^fortisiem$</field>
-    <field name="eventSeverity">^8$|^9$|^10$</field>
-    <description>FortiSIEM: $(ruleName) $(incidentTarget)</description>
-  </rule>
+    <!-- Regla base: todos los eventos de FortiSIEM -->
+    <rule id="190100" level="3">
+        <field name="source">^fortisiem$</field>
+        <description>$(ruleName) $(incidentTarget)</description>
+        <group>fortisiem,</group>
+    </rule>
+    
+      <rule id="190102" level="13">
+      <if_sid>190100</if_sid>
+        <field name="source">^fortisiem$</field>
+        <field name="eventSeverity">^8$|^9$|^10$</field>
+        <description>$(ruleName) $(incidentTarget)</description>
+      </rule>
 
 </group>

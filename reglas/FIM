@@ -1,0 +1,27 @@
+<group name="syscheck,custom_data_folder,">
+
+    <rule id="100991" level="10">
+        <if_sid>550</if_sid>
+        <match>opt</match>
+        <description>Alerta FIM: Un Archivo ha sido Modificado</description>
+        <mitre>
+            <id>T1565.001</id>
+        </mitre>
+    </rule>
+
+    <rule id="100994" level="9">
+        <if_sid>554</if_sid>
+        <match>opt</match>
+        <description>Alerta FIM: Un Archivo ha sido Creado</description>
+    </rule>
+
+    <rule id="100993" level="12">
+        <if_sid>553</if_sid>
+        <match>opt</match>
+        <description>Alerta FIM: Un Archivo ha sido Eliminado</description>
+        <mitre>
+            <id>T1070.004</id>
+        </mitre>
+    </rule>
+
+</group>

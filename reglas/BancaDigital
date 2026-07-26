@@ -1,127 +1,55 @@
-<!-- Modify it at your will. -->
-<group name="banca_digital,">
-
-    <!-- ============ REGLAS BASE - NIVEL 3 (almacenamiento) ============ -->
-
-    <rule id="110200" level="3">
-        <decoded_as>BDigitalLogin</decoded_as>
-        <description>BancaDigital: Login [$(BDigitalLogType)] usuario=$(BDigitalUserName) email=$(BDigitalEmail) ip=$(srcip)</description>
-        <group>banca_login,</group>
-    </rule>
-
-    <rule id="110201" level="3">
-        <decoded_as>BDigitalPayQr</decoded_as>
-        <description>BancaDigital: Pago QR [$(BDigitalLogType)] usuario=$(BDigitalUserName) monto=$(BDigitalAmount) $(BDigitalCurrency) origen=$(BDigitalOriginAccount) destino=$(BDigitalTargetAccount)</description>
-        <group>banca_pay_qr,</group>
-    </rule>
-
-    <rule id="110202" level="3">
-        <decoded_as>BDigitalReadQr</decoded_as>
-        <description>BancaDigital: Lectura QR [$(BDigitalLogType)] usuario=$(BDigitalUserName) qrId=$(BDigitalQrId)</description>
-        <group>banca_read_qr,</group>
-    </rule>
-
-    <rule id="110203" level="3">
-        <decoded_as>BDigitalGenerateOtp</decoded_as>
-        <description>BancaDigital: OTP generado [$(BDigitalLogType)] usuario=$(BDigitalUserName) funcionalidad=$(BDigitalFunctionality)</description>
-        <group>banca_otp,</group>
-    </rule>
-</group>
+<rule id="110225" level="12" frequency="5" timeframe="180">
+    <if_matched_sid>110210</if_matched_sid>
+    <same_srcip/>
+    <different_field>BDigitalUserName</different_field>
+    <description>La direcion IP $(srcip) intento loguearse a mas de 5 usuarios en 3 minutos</description>
+    <group>banca_credential_stuffing,attack,</group>
+</rule>
 
 
-<group name="banca_digital_alertas,">
+ <rule id="110212" level="12" frequency="10" timeframe="300">
+    <if_matched_sid>110210</if_matched_sid>
+    <same_srcip/>
+    <description>Posible fuerza bruta desde la IP $(srcip) - mas de 10 logins fallidos </description>
+    <group>authentication_failures,brute_force,attack,</group>
+ </rule>
 
-    <!-- ============ CU-01: LOGIN FALLIDO ============ -->
-    <rule id="110210" level="5">
-        <if_sid>110200</if_sid>
-        <field name="BDigitalLogType">response</field>
-        <match>"success":false</match>
-        <description>BancaDigital ALERTA: Login fallido usuario=$(BDigitalUserName) ip=$(srcip)</description>
-        <group>authentication_failed,banca_login_failed,</group>
-    </rule>
+ <rule id="177151" level="9">
+    <if_sid>177150</if_sid>
+    <field name="dark_severity">^0$|^1$|^2$</field>
+    <description> $(dark_description) $(dark_severity) </description>
+  </rule>
 
-    <!-- ============ CU-02: FUERZA BRUTA POR USUARIO ============ (en pruebas) -->
-    <rule id="110211" level="10" frequency="10" timeframe="120">
-        <if_matched_sid>110210</if_matched_sid>
-        <same_field>BDigitalUserName</same_field>
-        <description>BancaDigital: Posible fuerza bruta mas de 10 logins fallidos al usuario $(BDigitalUserName) en 2 min</description>
-        <group>authentication_failures,brute_force,</group>
-    </rule>
+  <rule id="177152" level="9">
+    <if_sid>177150</if_sid>
+    <field name="dark_severity">^3$|^4$|^5$</field>
+    <description>$(dark_description) $(dark_severity)</description>
+  </rule>
 
-    <!-- ============ CU-03: FUERZA BRUTA POR IP ============ (en revision, pendiente de ajuste) -->
-    <rule id="110212" level="12" frequency="10" timeframe="300">
-        <if_matched_sid>110210</if_matched_sid>
-        <same_srcip/>
-        <description>BancaDigital: Posible fuerza bruta desde ip $(srcip) - mas de 10 logins fallidos </description>
-        <group>authentication_failures,brute_force,attack,</group>
-    </rule>
+  <rule id="177153" level="10">
+    <if_sid>177150</if_sid>
+    <field name="dark_severity">^6$|^7$</field>
+    <description>$(dark_description) $(dark_severity)</description>
+  </rule>
 
-    <!-- ============ CU-06: VELOCIDAD DE PAGOS ============ -->
-    <rule id="110222" level="8" frequency="5" timeframe="180">
-        <if_matched_sid>110201</if_matched_sid>
-        <same_field>BDigitalUserName</same_field>
-        <description>BancaDigital ALERTA: 5+ pagos QR en 3 min usuario=$(BDigitalUserName)</description>
-        <group>banca_velocity,fraud_suspicion,</group>
-    </rule>
+  <rule id="177154" level="12">
+    <if_sid>177150</if_sid>
+    <field name="dark_severity">^8$|^9$</field>
+    <description>$(dark_description) $(dark_severity)</description>
+  </rule>
 
-    <!-- ============ CU-07: ABUSO DE OTP ============ -->
-    <rule id="110223" level="8" frequency="4" timeframe="300">
-        <if_matched_sid>110203</if_matched_sid>
-        <same_field>BDigitalUserName</same_field>
-        <description>BancaDigital: 4+ OTP generados en 5 min usuario=$(BDigitalUserName)</description>
-        <group>banca_otp_abuse,</group>
-    </rule>
+  <rule id="177155" level="14">
+    <if_sid>177150</if_sid>
+    <field name="dark_severity">^10$</field>
+    <description>$(dark_description) $(dark_severity)</description>
+  </rule>
 
-    <!-- ============ CU-08: ACCOUNT TAKEOVER (multiples IPs por usuario) ============ -->
-    <rule id="110224" level="14" frequency="2" timeframe="600">
-        <if_matched_sid>110200</if_matched_sid>
-        <same_field>BDigitalUserName</same_field>
-        <different_srcip/>
-        <description>BancaDigital: Usuario $(BDigitalUserName) accede desde multiples IPs en menos 10 min</description>
-        <group>banca_account_takeover,</group>
-    </rule>
+  <rule id="110221" level="10">
+    <if_sid>110201</if_sid>
+    <field name="BDigitalLogType">response</field>
+    <field name="BDigitalAmount" type="pcre2">^([9-9][0-9]{3}\.|[1-9][0-9]{4,})</field>
+    <description>BancaDigital: Transaccion alta $(BDigitalAmount) $(BDigitalCurrency) usuario=$(BDigitalUserName)</description>
+    <group>banca_very_high_amount,</group>
+  </rule>
 
-    <!-- ============ CU-09: CREDENTIAL STUFFING ============ -->
-    <rule id="110225" level="11" frequency="5" timeframe="180">
-        <if_matched_sid>110200</if_matched_sid>
-        <same_srcip/>
-        <different_field>BDigitalUserName</different_field>
-        <description>BancaDigital: La direccion IP $(srcip) intento loguearse a mas de 5 usuarios en 3 minutos</description>
-        <group>banca_credential_stuffing,attack,</group>
-    </rule>
 
-    <!-- ============ CU-10: LOGIN EXITOSO DESDE PAIS EXTRANJERO ============ -->
-    <rule id="110226" level="10">
-        <if_sid>110200</if_sid>
-        <field name="BDigitalLogType">response</field>
-        <match>"success":true</match>
-        <srcgeoip>!BO</srcgeoip>
-        <description>BancaDigital: Login exitoso desde pais extranjero usuario=$(BDigitalUserName) ip=$(srcip)</description>
-        <group>banca_geo_anomaly,</group>
-    </rule>
-
-    <!-- ============ CU-11: PAGOS REPETIDOS A LA MISMA CUENTA DESTINO ============ -->
-    <rule id="110227" level="7" frequency="3" timeframe="600">
-        <if_matched_sid>110201</if_matched_sid>
-        <same_field>BDigitalTargetAccount</same_field>
-        <description>BancaDigital: 3+ pagos a la misma cuenta destino=$(BDigitalTargetAccount) en 10 min</description>
-        <group>banca_repeated_target,</group>
-    </rule>
-
-    <!-- ============ CU-05: TRANSACCION MUY ALTA (> 5000 Bs) ============ (en revision) -->
-    <rule id="110221" level="10">
-        <if_sid>110201</if_sid>
-        <field name="BDigitalLogType">response</field>
-        <field name="BDigitalAmount" type="pcre2">^([9-9][0-9]{3}\.|[1-9][0-9]{4,})</field>
-        <description>BancaDigital: Transaccion alta $(BDigitalAmount) $(BDigitalCurrency) usuario=$(BDigitalUserName)</description>
-        <group>banca_very_high_amount,</group>
-    </rule>
-
-    <!-- ============ CU-13: OTP + PAGO ALTO MONTO ENCADENADOS ============ -->
-    <rule id="110229" level="6" timeframe="60">
-        <if_matched_sid>110223</if_matched_sid>
-        <same_field>BDigitalUserName</same_field>
-        <description>BancaDigital: OTP + Pago alto monto en menos de 60s usuario=$(BDigitalUserName) monto=$(BDigitalAmount)</description>
-        <group>banca_high_risk_flow,</group>
-    </rule>
-</group>
