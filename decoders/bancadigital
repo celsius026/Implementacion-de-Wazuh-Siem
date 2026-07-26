@@ -1,0 +1,137 @@
+<!-- Modify it at your will. -->
+
+<!-- Local Decoders -->
+
+<!-- Modify it at your will. -->
+<!-- Copyright (C) 2015, Wazuh Inc. -->
+
+<!--
+  - Allowed static fields:
+  - location   - where the log came from (only on FTS)
+  - srcuser    - extracts the source username
+  - dstuser    - extracts the destination (target) username
+  - user       - an alias to dstuser (only one of the two can be used)
+  - srcip      - source ip
+  - dstip      - dst ip
+  - srcport    - source port
+  - dstport    - destination port
+  - protocol   - protocol
+  - id         - event id
+  - url        - url of the event
+  - action     - event action (deny, drop, accept, etc)
+  - status     - event status (success, failure, etc)
+  - extra_data - Any extra data
+-->
+
+<!-- ============ PADRE ============ -->
+<decoder name="BancaDigital">
+    <prematch>CortexAuditWorker </prematch>
+</decoder>
+
+<!-- ============ LOGIN ============ -->
+<decoder name="BDigitalLogin">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"login"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"email":"([^"]*)","requireWebOtp":"([^"]*)","mfaOtpHash":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)"</regex>
+    <order>BDigitalEmail,BDigitalRequireWebOtp,BDigitalMfaOtpHash,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation</order>
+</decoder>
+
+<!-- ============ PAY_QR ============ -->
+<decoder name="BDigitalPayQr">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"pay_qr"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"qrId":"([^"]*)","originAccount":"([^"]*)","targetAccount":"([^"]*)","amount":"([^"]*)","currency":"([^"]*)","description":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)"</regex>
+    <order>BDigitalQrId,BDigitalOriginAccount,BDigitalTargetAccount,BDigitalAmount,BDigitalCurrency,BDigitalDescription,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation</order>
+</decoder>
+
+<!-- ============ READ_QR ============ -->
+<decoder name="BDigitalReadQr">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"read_qr"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"qrId":"([^"]*)","originAccount":"([^"]*)","targetAccount":"([^"]*)","amount":"([^"]*)","currency":"([^"]*)","description":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)"</regex>
+    <order>BDigitalQrId,BDigitalOriginAccount,BDigitalTargetAccount,BDigitalAmount,BDigitalCurrency,BDigitalDescription,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation</order>
+</decoder>
+
+<!-- ============ GENERATE_OTP ============ -->
+<decoder name="BDigitalGenerateOtp">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"generate_otp"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"email":"([^"]*)","hashCode":"([^"]*)","functionality":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)"</regex>
+    <order>BDigitalEmail,BDigitalHashCode,BDigitalFunctionality,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation</order>
+</decoder>
+
+<!-- ============ APERTURA_CUENTA ============ -->
+<decoder name="BDigitalAperturaCuenta">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"apertura_cuenta"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"productId":"([^"]*)","currency":"([^"]*)","mfaOtpHash":"([^"]*)","accountId":"([^"]*)","accountNumber":"([^"]*)","status":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)","country":"([^"]*)","countryCode":"([^"]*)","city":"([^"]*)","cityCode":"([^"]*)","success":([a-z]*|null),"errorCode":([^,]*),"errorMessage":([^,]*),"createdAt":"([^"]*)"</regex>
+    <order>BDigitalProductId,BDigitalCurrency,BDigitalMfaOtpHash,BDigitalAccountId,BDigitalAccountNumber,BDigitalStatus,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation,BDigitalCountry,BDigitalCountryCode,BDigitalCity,BDigitalCityCode,BDigitalSuccess,BDigitalErrorCode,BDigitalErrorMessage,BDigitalCreatedAt</order>
+</decoder>
+
+<!-- ============ GESTION_TARJETA_DEBITO ============ -->
+<decoder name="BDigitalGestionTarjeta">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"gestion_tarjeta_debito"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"cardId":"([^"]*)","operation":"([^"]*)","mfaOtpHash":"([^"]*)","isEnabled":([a-z]*|null),"details":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)","country":"([^"]*)","countryCode":"([^"]*)","city":"([^"]*)","cityCode":"([^"]*)","success":([a-z]*|null),"errorCode":([^,]*),"errorMessage":([^,]*),"createdAt":"([^"]*)"</regex>
+    <order>BDigitalCardId,BDigitalOperation,BDigitalMfaOtpHash,BDigitalIsEnabled,BDigitalDetails,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation,BDigitalCountry,BDigitalCountryCode,BDigitalCity,BDigitalCityCode,BDigitalSuccess,BDigitalErrorCode,BDigitalErrorMessage,BDigitalCreatedAt</order>
+</decoder>
+
+<!-- ============ CAMBIO_CONTRASENA ============ -->
+<decoder name="BDigitalCambioContrasenia">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"cambio_contrase</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"currentPasswordHash":"([^"]*)","newPasswordHash":"([^"]*)","mfaOtpHash":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)","country":"([^"]*)","countryCode":"([^"]*)","city":"([^"]*)","cityCode":"([^"]*)","success":(true|false|null),"errorCode":(null|"[^"]*"),"errorMessage":(null|"[^"]*"),"createdAt":"([^"]*)"</regex>
+    <order>BDigitalCurrentPasswordHash,BDigitalNewPasswordHash,BDigitalMfaOtpHash,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation,BDigitalCountry,BDigitalCountryCode,BDigitalCity,BDigitalCityCode,BDigitalSuccess,BDigitalErrorCode,BDigitalErrorMessage,BDigitalCreatedAt</order>
+</decoder>
+
+<!-- ============ GENERACION_OTP ============ -->
+<decoder name="BDigitalGeneracionOtp">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"generacion_otp"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"email":"([^"]*)","hashCode":"([^"]*)","functionality":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)","country":"([^"]*)","countryCode":"([^"]*)","city":"([^"]*)","cityCode":"([^"]*)","success":(true|false|null),"errorCode":(null|"[^"]*"),"errorMessage":(null|"[^"]*"),"createdAt":"([^"]*)"</regex>
+    <order>BDigitalEmail,BDigitalHashCode,BDigitalFunctionality,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation,BDigitalCountry,BDigitalCountryCode,BDigitalCity,BDigitalCityCode,BDigitalSuccess,BDigitalErrorCode,BDigitalErrorMessage,BDigitalCreatedAt</order>
+</decoder>
+
+<!-- ============ PAY_SERVICES ============ -->
+<decoder name="BDigitalPayServices">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"pay_services"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"companyId":"([^"]*)","companyName":"([^"]*)","serviceName":"([^"]*)","paymentCode":"([^"]*)","originAccount":"([^"]*)","amount":"([^"]*)","currency":"([^"]*)","description":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)","country":"([^"]*)","countryCode":"([^"]*)","city":"([^"]*)","cityCode":"([^"]*)","success":(true|false|null),"errorCode":(null|"[^"]*"),"errorMessage":(null|"[^"]*"),"createdAt":"([^"]*)"</regex>
+    <order>BDigitalCompanyId,BDigitalCompanyName,BDigitalServiceName,BDigitalPaymentCode,BDigitalOriginAccount,BDigitalAmount,BDigitalCurrency,BDigitalDescription,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation,BDigitalCountry,BDigitalCountryCode,BDigitalCity,BDigitalCityCode,BDigitalSuccess,BDigitalErrorCode,BDigitalErrorMessage,BDigitalCreatedAt</order>
+</decoder>
+
+<!-- ============ GENERATE_QR ============ -->
+<decoder name="BDigitalGenerateQr">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"generate_qr"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"qrId":"([^"]*)","originAccount":"([^"]*)","targetAccount":"([^"]*)","amount":"([^"]*)","currency":"([^"]*)","description":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)","country":"([^"]*)","countryCode":"([^"]*)","city":"([^"]*)","cityCode":"([^"]*)","success":(true|false|null),"errorCode":(null|"[^"]*"),"errorMessage":(null|"[^"]*"),"createdAt":"([^"]*)"</regex>
+    <order>BDigitalQrId,BDigitalOriginAccount,BDigitalTargetAccount,BDigitalAmount,BDigitalCurrency,BDigitalDescription,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation,BDigitalCountry,BDigitalCountryCode,BDigitalCity,BDigitalCityCode,BDigitalSuccess,BDigitalErrorCode,BDigitalErrorMessage,BDigitalCreatedAt</order>
+</decoder>
+
+<!-- ============ TRANSFERENCIA ============ -->
+<decoder name="BDigitalTransferencia">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"transferencia"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"originAccount":"([^"]*)","targetAccount":"([^"]*)","transferType":"([^"]*)","amount":"([^"]*)","currency":"([^"]*)","description":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)","country":"([^"]*)","countryCode":"([^"]*)","city":"([^"]*)","cityCode":"([^"]*)","success":(true|false|null),"errorCode":(null|"[^"]*"),"errorMessage":(null|"[^"]*"),"createdAt":"([^"]*)"</regex>
+    <order>BDigitalOriginAccount,BDigitalTargetAccount,BDigitalTransferType,BDigitalAmount,BDigitalCurrency,BDigitalDescription,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation,BDigitalCountry,BDigitalCountryCode,BDigitalCity,BDigitalCityCode,BDigitalSuccess,BDigitalErrorCode,BDigitalErrorMessage,BDigitalCreatedAt</order>
+</decoder>
+
+<!-- ============ PAGO_PRESTAMO ============ -->
+<decoder name="BDigitalPagoPrestamo">
+    <parent>BancaDigital</parent>
+    <use_own_name>true</use_own_name>
+    <prematch>"service":"pago_prestamo"</prematch>
+    <regex offset="after_parent" type="pcre2">^\{"originAccount":"([^"]*)","numberCredit":"([^"]*)","amount":"([^"]*)","currency":"([^"]*)","description":"([^"]*)","numberTx":"([^"]*)","balanceAfter":"([^"]*)","id":"([^"]*)","logType":"([^"]*)","sessionId":"([^"]*)","userName":"([^"]*)","userId":"([^"]*)","ip":"([^"]*)","service":"([^"]*)","channel":"([^"]*)","infoDevice":"([^"]*)","browserName":"([^"]*)","os":"([^"]*)","deviceVersion":"([^"]*)","geoLocalization":"([^"]*)","country":"([^"]*)","countryCode":"([^"]*)","city":"([^"]*)","cityCode":"([^"]*)","success":(true|false|null),"errorCode":(null|"[^"]*"),"errorMessage":(null|"[^"]*"),"createdAt":"([^"]*)"</regex>
+    <order>BDigitalOriginAccount,BDigitalNumberCredit,BDigitalAmount,BDigitalCurrency,BDigitalDescription,BDigitalNumberTx,BDigitalBalanceAfter,BDigitalEventId,BDigitalLogType,BDigitalSessionId,BDigitalUserName,BDigitalUserId,srcip,BDigitalService,BDigitalChannel,BDigitalInfoDevice,BDigitalBrowserName,BDigitalDeviceOs,BDigitalDeviceVersion,BDigitalGeoLocation,BDigitalCountry,BDigitalCountryCode,BDigitalCity,BDigitalCityCode,BDigitalSuccess,BDigitalErrorCode,BDigitalErrorMessage,BDigitalCreatedAt</order>
+</decoder>

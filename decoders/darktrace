@@ -1,0 +1,90 @@
+<!-- Modify it at your will. -->
+<!-- ============ DECODER PADRE ============ -->
+<decoder name="darktrace-cef">
+  <prematch type="pcre2">CEF:\d+\|Darktrace\|</prematch>
+</decoder>
+
+<!-- ============ DECODERS HIJOS DIRECTOS (Mismo nombre para procesamiento paralelo) ============ -->
+
+<!-- 1. Cabecera fija -->
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">CEF:\d+\|Darktrace\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|</regex>
+  <order>dark_product, dark_version, dark_event_id, dark_description, dark_severity</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">dvc=(\S+)</regex>
+  <order>srcip</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">dst=(\S+)</regex>
+  <order>dark_dstip</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">dvchost=(\S+)</regex>
+  <order>dark_dvchost</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">dpt=(\d+)</regex>
+  <order>dark_dstport</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">darktraceUrl=(\S+)</regex>
+  <order>dark_url</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">mitreId=(\S+)</regex>
+  <order>mitre.id</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">tags=(.*?)(?:\s+suser=|$)</regex>
+  <order>dark_tags</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">suser=(.*)$</regex>
+  <order>dark_srcuser</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">deviceMacAddress=(\S+)</regex>
+  <order>dark_mac</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">dmac=(\S+)</regex>
+  <order>dark_mac</order>
+</decoder>
+
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">externalId=(\S+)</regex>
+  <order>dark_external_id</order>
+</decoder>
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">currentGroup=(\S+)</regex>
+  <order>dark_current_group</order>
+</decoder>
+<decoder name="darktrace-cef-fields">
+  <parent>darktrace-cef</parent>
+  <regex type="pcre2">groupCategory=(\S+)</regex>
+  <order>dark_group_category</order>
+</decoder>
