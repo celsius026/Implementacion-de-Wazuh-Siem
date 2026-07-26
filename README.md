@@ -17,7 +17,7 @@ aplicación móvil de notificación de seguridad.
 
 ![alt text](imagen.png)
 ---
-## 📐 Arquitectura funcion por capaz
+## 📐 Arquitectura funcional por capaz
 
 ![alt text](imagen-1.png)
 
