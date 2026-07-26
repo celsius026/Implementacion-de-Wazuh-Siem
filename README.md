@@ -13,12 +13,13 @@ aplicación móvil de notificación de seguridad.
 
 ---
 
-## 📐 Arquitectura general
+## 📐 Arquitectura de Wazuh implementada
 
 ![alt text](imagen.png)
 ---
+## 📐 Arquitectura funcion por capaz
 
-
+![alt text](imagen-1.png)
 
 ---
 
