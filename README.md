@@ -39,30 +39,13 @@ Ver el detalle de cada uno en `docs/`.
 
 ## ⚙️ Requisitos
 
-- Wazuh Manager (probado en versión 4.x)
+- Wazuh Manager (probado en versión 4.14)
 - Python 3.8+ (para el listener de FortiSIEM y la integración custom)
 - Librería `requests` (`pip install requests`)
 - Acceso de red UDP/TCP desde los dispositivos FortiGate/FortiWeb/Darktrace/FortiSIEM/Banca Digital hacia el manager
 
 ---
 
-## 🚀 Despliegue rápido
-
-1. Copiar los decoders de `etc/decoders/` a `/var/ossec/etc/decoders/`.
-2. Copiar las reglas de `etc/rules/` a `/var/ossec/etc/rules/`.
-3. Fusionar los bloques de `etc/ossec.conf` con la configuración existente en `/var/ossec/etc/ossec.conf`.
-4. Instalar el listener de FortiSIEM como servicio (ver `docs/fortisiem-listener.md`).
-5. Configurar variables de entorno para la integración custom (ver `docs/integracion-app-movil.md`).
-6. Reiniciar Wazuh Manager:
-   ```bash
-   systemctl restart wazuh-manager
-   ```
-7. Validar sintaxis antes de reiniciar en producción:
-   ```bash
-   /var/ossec/bin/wazuh-logtest
-   ```
-
----
 
 ## 🔒 Notas de seguridad
 
@@ -77,6 +60,4 @@ Ver el detalle de cada uno en `docs/`.
 
 ## 👤 Autor
 
-Proyecto desarrollado como trabajo práctico de la materia de Seguridad / SIEM.
-Alcance propio: diseño e implementación de decoders, reglas de correlación e
-integración de notificaciones para Wazuh.
+Celso Jimenes Obando
