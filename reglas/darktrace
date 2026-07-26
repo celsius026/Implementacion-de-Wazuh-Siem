@@ -1,0 +1,8 @@
+<!-- Modify it at your will. -->
+<group name="darktrace,cef,">
+  <!-- Regla Generica para todos los eventos de Darktrace -->
+  <rule id="100100" level="10">
+    <decoded_as>darktrace-cef</decoded_as>
+    <description>Darktrace: $(dark_description)</description>
+  </rule>
+</group>

@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+"""
+FortiSIEM XML-to-JSON Syslog Listener
+======================================
+Recibe logs XML de FortiSIEM por syslog (UDP/TCP),
+los convierte a JSON limpio y los escribe a un archivo
+que Wazuh consume con log_format=json.
+
+Uso:
+    python3 fortisiem_listener.py
+
+Configuracion via variables de entorno o editar DEFAULTS abajo.
+"""
+
+import socket
+import json
+import re
+import signal
+import sys
+import os
+import logging
+from xml.etree import ElementTree as ET
+from datetime import datetime, timezone
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+
+# ============================================================
+# CONFIGURACION
+# ============================================================
+LISTEN_HOST = os.getenv("FSIEM_LISTEN_HOST", "0.0.0.0")
+LISTEN_PORT = int(os.getenv("FSIEM_LISTEN_PORT", "5555"))
+OUTPUT_FILE = os.getenv("FSIEM_OUTPUT_FILE", "/var/log/fortisiem/fortisiem.json")
+ERROR_LOG = os.getenv("FSIEM_ERROR_LOG", "/var/log/fortisiem/listener_errors.log")
+MAX_FILE_SIZE = int(os.getenv("FSIEM_MAX_FILE_MB", "100")) * 1024 * 1024  # 100MB default
+BACKUP_COUNT = int(os.getenv("FSIEM_BACKUP_COUNT", "5"))
+BUFFER_SIZE = 65535
+
+# ============================================================
+# LOGGING DEL LISTENER (errores, no los logs de FortiSIEM)
+# ============================================================
+Path(os.path.dirname(ERROR_LOG)).mkdir(parents=True, exist_ok=True)
+logger = logging.getLogger("fortisiem_listener")
+logger.setLevel(logging.INFO)
+err_handler = RotatingFileHandler(ERROR_LOG, maxBytes=10*1024*1024, backupCount=3)
+err_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+logger.addHandler(err_handler)
+
+# ============================================================
+# HANDLER DE ROTACION PARA EL OUTPUT JSON
+# ============================================================
+Path(os.path.dirname(OUTPUT_FILE)).mkdir(parents=True, exist_ok=True)
+json_logger = logging.getLogger("fortisiem_json")
+json_logger.setLevel(logging.INFO)
+json_handler = RotatingFileHandler(
+    OUTPUT_FILE,
+    maxBytes=MAX_FILE_SIZE,
+    backupCount=BACKUP_COUNT
+)
+json_handler.setFormatter(logging.Formatter("%(message)s"))
+json_logger.addHandler(json_handler)
+json_logger.propagate = False
+
+# ============================================================
+# CONTADORES
+# ============================================================
+stats = {
+    "received": 0,
+    "parsed_ok": 0,
+    "parse_errors": 0,
+    "started_at": datetime.now(timezone.utc).isoformat()
+}
+
+
+def extract_xml_from_syslog(raw: str) -> str:
+    """
+    Extrae el bloque XML del mensaje syslog.
+    Maneja tanto formato puro XML como CEF con rawEvent embebido.
+    """
+    # Caso 1: XML directo en syslog (<event> ... </event>)
+    xml_match = re.search(r"(<event\s.*?</event>)", raw, re.DOTALL)
+    if xml_match:
+        return xml_match.group(1)
+
+    # Caso 2: CEF con rawEvent= embebido
+    raw_match = re.search(r"rawEvent=(.*?)(?:\s\|{2,}|\s*$)", raw, re.DOTALL)
+    if raw_match:
+        inner = raw_match.group(1)
+        inner_xml = re.search(r"(<event\s.*?</event>)", inner, re.DOTALL)
+        if inner_xml:
+            return inner_xml.group(1)
+
+    return None
+
+
+def parse_syslog_header(raw: str) -> dict:
+    """Extrae timestamp y source IP del header syslog."""
+    header = {}
+    # Formato: Jun 16 15:35:33 192.168.141.206 ...
+    m = re.match(
+        r"^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+(\S+)\s+",
+        raw
+    )
+    if m:
+        header["syslog_timestamp"] = m.group(1)
+        header["syslog_source"] = m.group(2)
+    return header
+
+
+def xml_element_to_dict(element) -> dict:
+    """
+    Convierte un elemento XML y todos sus hijos a un dict.
+    Maneja elementos anidados, atributos y texto.
+    """
+    result = {}
+
+    # Atributos del elemento
+    if element.attrib:
+        for key, val in element.attrib.items():
+            result[f"@{key}"] = val
+
+    for child in element:
+        # Nombre del tag limpio (sin namespace)
+        tag = re.sub(r"^\{.*?\}", "", child.tag)
+        # Limpiar tags con prefijo _ (como _ruleName)
+        clean_tag = tag.lstrip("_")
+
+        if len(child) > 0:
+            # Tiene hijos -> recursion
+            child_dict = xml_element_to_dict(child)
+            result[clean_tag] = child_dict
+        else:
+            # Hoja -> texto
+            text = (child.text or "").strip()
+            if text:
+                result[clean_tag] = text
+
+    return result
+
+
+def normalize_event(parsed: dict) -> dict:
+    """
+    Normaliza y enriquece el evento parseado.
+    Agrega campos calculados utiles para Wazuh.
+    """
+    event = {
+        "source": "fortisiem",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    event.update(parsed)
+
+    # Normalizar severidad a nivel Wazuh-friendly
+    severity = parsed.get("eventSeverity", "0")
+    try:
+        sev_int = int(severity)
+        if sev_int <= 3:
+            event["severity_label"] = "low"
+        elif sev_int <= 6:
+            event["severity_label"] = "medium"
+        elif sev_int <= 8:
+            event["severity_label"] = "high"
+        else:
+            event["severity_label"] = "critical"
+    except ValueError:
+        event["severity_label"] = "unknown"
+
+    # Parsear MITRE ATT&CK technique IDs a lista
+    tech_ids = parsed.get("attackTechniqueId", "")
+    if tech_ids and "," in tech_ids:
+        event["mitre_technique_ids"] = [t.strip() for t in tech_ids.split(",") if t.strip()]
+
+    # Parsear IPs de reporte a lista
+    rpt_ips = parsed.get("incidentRptIp", "")
+    if rpt_ips and "," in rpt_ips:
+        event["reporting_ips"] = [ip.strip() for ip in rpt_ips.split(",") if ip.strip()]
+
+    # Parsear nombres de dispositivos a lista
+    rpt_devs = parsed.get("incidentRptDevName", "")
+    if rpt_devs and "," in rpt_devs:
+        event["reporting_devices"] = [d.strip() for d in rpt_devs.split(",") if d.strip()]
+
+    # Limpiar triggerEventLists (quitar los event IDs largos para reducir tamano)
+    if "triggerEventLists" in event:
+        tl = event["triggerEventLists"]
+        if isinstance(tl, dict):
+            event["triggerEventTypes"] = []
+            for key, val in tl.items():
+                if "Type" in key or "type" in key:
+                    event["triggerEventTypes"].append(val)
+            for key, val in tl.items():
+                if "Events" in key and isinstance(val, str):
+                    event["triggerEventCount"] = len(val.split(","))
+                    break
+            del event["triggerEventLists"]
+
+    return event
+
+
+def process_message(raw: str) -> dict:
+    """Pipeline completo: raw syslog -> JSON dict."""
+    result = parse_syslog_header(raw)
+
+    xml_str = extract_xml_from_syslog(raw)
+    if not xml_str:
+        return None
+
+    try:
+        root = ET.fromstring(xml_str)
+    except ET.ParseError as e:
+        logger.warning(f"XML parse error: {e} | raw_start: {raw[:200]}")
+        return None
+
+    parsed = xml_element_to_dict(root)
+
+    if "name" in root.attrib:
+        parsed["event_class"] = root.attrib["name"]
+
+    event = normalize_event(parsed)
+    event.update({k: v for k, v in result.items() if k not in event})
+
+    return event
+
+
+def write_json_line(event: dict):
+    """Escribe una linea JSON al archivo de output."""
+    try:
+        line = json.dumps(event, ensure_ascii=False, separators=(",", ":"))
+        json_logger.info(line)
+    except (TypeError, ValueError) as e:
+        logger.error(f"JSON serialize error: {e}")
+
+
+def run_listener():
+    """Loop principal del listener UDP."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    # Buffer de recepcion mas grande para rafagas
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 2 * 1024 * 1024)
+
+    sock.bind((LISTEN_HOST, LISTEN_PORT))
+    logger.info(f"Listening on {LISTEN_HOST}:{LISTEN_PORT} (UDP)")
+    logger.info(f"Output: {OUTPUT_FILE}")
+    print(f"[*] FortiSIEM listener started on {LISTEN_HOST}:{LISTEN_PORT}")
+    print(f"[*] Writing JSON to {OUTPUT_FILE}")
+
+    while True:
+        try:
+            data, addr = sock.recvfrom(BUFFER_SIZE)
+            stats["received"] += 1
+
+            raw = data.decode("utf-8", errors="replace").strip()
+            if not raw:
+                continue
+
+            event = process_message(raw)
+            if event:
+                event["listener_source_ip"] = addr[0]
+                write_json_line(event)
+                stats["parsed_ok"] += 1
+            else:
+                stats["parse_errors"] += 1
+                logger.warning(
+                    f"Unparseable message from {addr[0]}: {raw[:500]}"
+                )
+
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}", exc_info=True)
+
+
+def handle_signal(signum, frame):
+    """Graceful shutdown con reporte de stats."""
+    logger.info(f"Shutting down. Stats: {json.dumps(stats)}")
+    print(f"\n[*] Shutdown. Stats: {json.dumps(stats, indent=2)}")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, handle_signal)
+    signal.signal(signal.SIGINT, handle_signal)
+    run_listener()

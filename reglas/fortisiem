@@ -1,0 +1,11 @@
+<!-- Modify it at your will. -->
+
+<group name="fortisiem,">
+
+  <rule id="190102" level="13">
+    <field name="source">^fortisiem$</field>
+    <field name="eventSeverity">^8$|^9$|^10$</field>
+    <description>FortiSIEM: $(ruleName) $(incidentTarget)</description>
+  </rule>
+
+</group>
