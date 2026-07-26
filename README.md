@@ -15,77 +15,10 @@ aplicación móvil de notificación de seguridad.
 
 ## 📐 Arquitectura general
 
-```
-                    ┌─────────────────────────────────────────────┐
-                    │                FUENTES DE LOG                │
-                    │                                               │
-                    │  FortiGate (syslog)   FortiWeb (syslog CEF)  │
-                    │  Darktrace (CEF)      Banca Digital (JSON)   │
-                    │  FortiSIEM (XML/syslog, puerto propietario)  │
-                    └───────────────┬───────────────────────────────┘
-                                    │
-                     ┌──────────────▼───────────────┐
-                     │  Listener FortiSIEM (Python)  │
-                     │  XML → JSON  (puerto 5555/UDP)│
-                     │  /opt/fortisiem-listener/     │
-                     └──────────────┬───────────────┘
-                                    │ escribe a
-                                    ▼
-                     /var/log/fortisiem/fortisiem.json
-                                    │
-   ┌────────────────────────────────┼───────────────────────────────┐
-   │            Wazuh Manager (ossec.conf → <remote> / <localfile>) │
-   │                                                                  │
-   │   Decoders  →  local_decoder.xml / fortiweb.xml / Darktrace.xml │
-   │                BancaDigital.xml                                 │
-   │                                                                  │
-   │   Rules     →  fortiweb.xml / darktrace.xml / fortisiem.xml     │
-   │                BancaDigital.xml / OverwriteRules.xml            │
-   └────────────────────────────────┬───────────────────────────────┘
-                                    │ alertas nivel >= 9
-                                    ▼
-                 ┌───────────────────────────────────────┐
-                 │ Integración custom (Python)            │
-                 │ custom-send-data-to-app.py           │
-                 │ - Determina "fuente" dinámicamente     │
-                 │ - Arma payload normalizado              │
-                 │ - POST con reintentos exponenciales     │
-                 └───────────────────┬─────────────────────┘
-                                     ▼
-                     Backend API app móvil (alertas push)
-```
-
+![alt text](imagen.png)
 ---
 
-## 📁 Estructura del repositorio
 
-```
-.
-├── README.md
-├── docs/
-│   ├── arquitectura.md
-│   ├── decoders.md
-│   ├── reglas.md
-│   ├── integracion-app-movil.md
-│   └── fortisiem-listener.md
-├── etc/
-│   ├── ossec.conf                     # configuración de entradas de log (sanitizada)
-│   ├── decoders/
-│   │   ├── local_decoder.xml
-│   │   ├── fortiweb.xml
-│   │   ├── Darktrace.xml
-│   │   └── BancaDigital.xml
-│   └── rules/
-│       ├── fortiweb.xml
-│       ├── darktrace.xml
-│       ├── fortisiem.xml
-│       ├── BancaDigital.xml
-│       └── OverwriteRules.xml
-├── integrations/
-│   └── custom-send-data-to-app.py   # usa variables de entorno, sin secretos
-└── fortisiem-listener/
-    └── fortisiem_listener.py
-```
 
 ---
 
